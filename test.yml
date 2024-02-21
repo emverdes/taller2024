@@ -1,0 +1,9 @@
+---
+- hosts: linux
+  user: sysadmin
+  vars:
+    ansible_host_key_checking: false
+
+  tasks:
+  - name: test
+    ping:
