@@ -1,0 +1,41 @@
+---
+- hosts: rocky
+  user: sysadmin
+  become: yes
+
+  tasks:
+
+  - name: Apache está instalado
+    ansible.builtin.dnf:
+      name: httpd
+      state: present
+
+  - name: Copiar configuración del proxy
+    ansible.builtin.copy:
+      src: ./files/proxy.conf
+      dest: /etc/httpd/conf.d
+      owner: root
+      group: root
+      mode: '0644'
+    notify: Reiniciar apache
+
+  - name: Apache está iniciado y habilitado
+    ansible.builtin.service:
+      name: httpd
+      state: started
+      enabled: true
+
+  - name: Habilito el servicio http en firewalld
+    ansible.posix.firewalld:
+      service: http
+      state: enabled
+      permanent: true
+      immediate: true
+
+  handlers:
+
+  - name: Reiniciar apache
+    ansible.builtin.service:
+      name: httpd
+      state: restarted
+     
