@@ -32,6 +32,21 @@
       permanent: true
       immediate: true
 
+  - name: Instalo paquetes para manejar selinux
+    ansible.builtin.dnf:
+      name: python3-libsemanage
+      state: present
+  
+  - name: Configuro selinux para permitir conexión con el tomcat
+    ansible.posix.seboolean:
+      name: "{{ item }}"
+      state: true
+      persistent: true
+    loop:
+    - httpd_can_network_relay
+    - httpd_can_network_connect
+    notify: Reiniciar apache
+
   handlers:
 
   - name: Reiniciar apache

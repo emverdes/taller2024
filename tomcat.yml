@@ -13,6 +13,19 @@
       update_cache: true
       state: present
 
+  - name: Crear grupo tomcat
+    ansible.builtin.group:
+      name: tomcat
+      state: present
+
+  - name: Crear usuario tomcat
+    ansible.builtin.user:
+      name: tomcat
+      group: tomcat
+      comment: Usuario tomcat
+      home: /opt/tomcat
+      state: present
+
   - name: Instalar tomcat desde url
     ansible.builtin.unarchive:
       src: "https://dlcdn.apache.org/tomcat/tomcat-8/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz"
@@ -21,6 +34,45 @@
 
   - name: Renombrar directorio de tomcat
     ansible.builtin.command: mv /opt/apache-tomcat-{{ tomcat_version }} /opt/tomcat
+    args:
+      chdir: /opt
+      creates: /opt/tomcat
+
+  - name: Cambiar propietario del directorio tomcat al usuario y grupo tomcat
+    ansible.builtin.file:
+      path: /opt/tomcat
+      state: directory
+      recurse: true
+      owner: tomcat
+      group: tomcat
+
+  - name: Crear archivo de servicio para tomcat
+    ansible.builtin.copy:
+      src: ./files/tomcat.service
+      dest: /etc/systemd/system/tomcat.service
+    notify: Reload systemd
 
   - name: Copiar sample
-    
+    ansible.builtin.copy:
+      src: ./files/sample.war
+      dest: /opt/tomcat/webapps/sample.war
+    notify: Reiniciar tomcat
+
+
+  - name: Iniciar tomcat
+    ansible.builtin.systemd:
+      name: tomcat
+      state: started
+      enabled: true
+      daemon_reload: true
+
+  handlers:
+
+  - name: Reiniciar tomcat
+    ansible.builtin.systemd:
+      name: tomcat
+      state: restarted
+
+  - name: Reload systemd
+    ansible.builtin.systemd:
+      daemon_reload: true
