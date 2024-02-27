@@ -1,0 +1,26 @@
+---
+- hosts: ubuntu
+  user: sysadmin
+  become: yes
+  vars:
+    tomcat_version: "8.5.99"
+
+  tasks:
+
+  - name: Instalar openjdk
+    ansible.builtin.apt:
+      name: openjdk-8-jre
+      update_cache: true
+      state: present
+
+  - name: Instalar tomcat desde url
+    ansible.builtin.unarchive:
+      src: "https://dlcdn.apache.org/tomcat/tomcat-8/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz"
+      dest: /opt
+      remote_src: true
+
+  - name: Renombrar directorio de tomcat
+    ansible.builtin.command: mv /opt/apache-tomcat-{{ tomcat_version }} /opt/tomcat
+
+  - name: Copiar sample
+    
